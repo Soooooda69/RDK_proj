@@ -4,3 +4,14 @@ function mu = manipulability(J, measure)
 % 'detjac', or 'invcond . Defines which manipulability measure is used.
 % mu: The corresponding measure of manipulability.
 
+e = sqrt(eig(J'*J));
+if strcmp("sigmamin", measure) == 1
+    mu = min(e);
+end
+if strcmp("invcond", measure) == 1
+    mu = min(e) / max(e);
+end
+if strcmp("detjac", measure) == 1
+    mu = det(J);
+end
+end

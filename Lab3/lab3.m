@@ -73,3 +73,27 @@ disp('The exponentiated xi_hat:');
 disp(exp_xi);
 disp('Difference between the initial transformation and the recovered one:');
 disp(FINV(g)*exp_xi);
+
+%% Test manipulability
+q3_list = [-pi/4:0.01:pi/4];
+m_m = [];
+m_i = [];
+m_d = [];
+for q3 = q3_list
+    J = ur5BodyJacobian([pi/2, pi/2, q3, pi/2, pi/2, 0]);
+    m_m = [m_m manipulability(J, "sigmamin")];
+    m_i = [m_i manipulability(J, "invcond")];
+    m_d = [m_d manipulability(J, "detjac")];
+end
+figure
+plot(q3_list, m_m);
+xlabel("q3");
+ylabel("manipulability");
+figure
+plot(q3_list, m_i);
+xlabel("q3");
+ylabel("manipulability");
+figure
+plot(q3_list, m_d);
+xlabel("q3");
+ylabel("manipulability");

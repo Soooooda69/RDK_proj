@@ -4,3 +4,4 @@ function mu = manipulability(J, measure)
 % 'detjac', or 'invcond . Defines which manipulability measure is used.
 % mu: The corresponding measure of manipulability.
 
+e = sqrt(eig(J'*J));

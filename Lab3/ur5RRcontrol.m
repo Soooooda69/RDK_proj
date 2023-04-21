@@ -1,8 +1,8 @@
 function finalerr =ur5RRcontrol(gdesired, K, ur5)
 %Implementation of resolved rate control system
-Interval=0.05;%time interval
-min_mani=0.00005;%Minimum Manipulability
-v_lim= 0.05;%threshold of v in m
+Interval=0.1;%time interval
+min_mani=0.005;%Minimum Manipulability
+v_lim= 0.02;%threshold of v in m
 w_lim= 15*pi/180;%threshold of w in rad
 
 %Current pose

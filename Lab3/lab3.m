@@ -5,6 +5,7 @@ clc;
 % init
 ur5 = ur5_interface();
 % set UR5 to home position
+pause(5);
 ur5.move_joints(ur5.home, 3);
 pause(3);
 
@@ -24,11 +25,11 @@ for i=1:5
     fwdKinToolFrame.move_frame('base_link',gstTheta);
     % move UR5
     ur5.move_joints(q(:,i)+ur5.home, 3);
-    pause(4);
+    pause(5);
     % calculate the difference by inv(gstReal)*gstTheta
     gstReal = ur5.get_current_transformation('base_link','ee_link');
     diff = FINV(gstReal)*gstTheta;
-    disp('\tdifference between current position and theoretical value is')
+    disp('difference between current position and theoretical value is')
     disp(diff)
 end
 %% Test ur5BodyJacobian
@@ -97,3 +98,17 @@ figure
 plot(q3_list, m_d);
 xlabel("q3");
 ylabel("manipulability");
+%% test ur5RRcontrol
+clc
+clear
+ur5=ur5_interface();
+ur5.move_joints(ur5.home, 3);
+pause(5);
+
+q1=[pi/8; pi/8; pi/8; pi/8; pi/8; pi/8];
+ur5.move_joints(q1+ur5.home, 5);
+pause(6);
+q2 = [pi/8; pi/7; pi/7; pi/8; pi/6; pi/6];
+gdesired=ur5FwdKin(q2);
+ur5RRcontrol(gdesired, 1, ur5);
+pause(20);

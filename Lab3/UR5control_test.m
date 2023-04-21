@@ -2,10 +2,13 @@
 clc
 clear
 ur5=ur5_interface();
-q=[pi/3; pi/4; -pi/3; -pi/3; pi/3; -pi/4];
-ur5.move_joints(q, 15)
-pause(15)
-q = [-pi/3; pi/3; 0; -pi/2; pi/3; -pi/4];
-gdesired=ur5FwdKin(q);
-ur5RRcontrol( gdesired, 1, ur5 )
-pause(20)
+ur5.move_joints(ur5.home, 3);
+pause(5);
+
+q1=[pi/8; pi/8; pi/8; pi/8; pi/8; pi/8];
+ur5.move_joints(q1+ur5.home, 5);
+pause(6);
+q2 = [pi/8; pi/7; pi/7; pi/8; pi/6; pi/6];
+gdesired=ur5FwdKin(q2);
+ur5RRcontrol(gdesired, 1, ur5);
+pause(20);

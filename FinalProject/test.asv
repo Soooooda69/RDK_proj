@@ -1,0 +1,37 @@
+% Inverse Kinematics Test
+clear;
+clc;
+rosshutdown;
+ur5 = ur5_interface();
+ur5.move_joints([0 0 0 0 0 0]',3);
+pause(3);
+joint_offset = [-pi/2 -pi/2 0 -pi/2 0 0]';
+joints = [pi/5 pi/5 pi/5 pi/5 pi/5 pi/5]';
+g_S_T = ur5FwdKin(joints);
+disp(g_S_T);
+
+% g_S_T(1,4) = g_S_T(2,4)+0.1;
+%transformation from keating base to {S}, g_0->S
+g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];  
+%-90 degree rotation around z and up x 0.0892 
+tf_frame('base_link','S',g_baseK_S)
+pause(0.5)
+
+%transformation from {T} to keating tool, g_T->6
+g_T_toolK = [ROTX(-pi/2)*ROTY(pi/2) [0 0 0]'; 0 0 0 1];
+%-90 around x and 90 around y
+tf_frame('tool0','T',inv(g_T_toolK));
+pause(0.5)
+
+%transformation from keating base to keating tool
+% g_06 = g_0S * g_ST * g_T6
+g_06 = g_baseK_S*g_S_T*g_T_toolK;
+tf_frame('S','T2',g_S_T);
+pause(0.5)
+
+thetas = ur5InvKin(g_06);
+disp(thetas);
+ur5.move_joints(thetas(:,6),3);
+pause(3);
+ur5.move_joints([0 0 0 0 0 0]',3);
+pause(3);

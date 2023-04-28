@@ -7,7 +7,7 @@ ur5 = ur5_interface();
 % Set UR5 back to home pose
 ur5.move_joints([0 0 0 0 0 0]',3);
 pause(3);
-joint_offset = [-pi/2 0 0 0 0 0]';
+joint_offset = [-pi 0 0 0 0 0]';
 joints = [pi/1 pi/5 -pi/5 pi/4 0 pi/2]';
 g_S_T = ur5FwdKin(joints);
 
@@ -29,7 +29,7 @@ g_06 = g_baseK_S*g_S_T*g_T_toolK;
 tf_frame('S','T2',g_S_T);
 pause(0.5);
 
-thetas = ur5InvKin(g_06);
+thetas = ur5InvKin(g_S_T);
 ur5.move_joints(thetas(:,6)-joint_offset,3);
 pause(5);
 
@@ -38,5 +38,5 @@ g = ur5.get_current_transformation('S','T');
 pause(0.5);
 [e_R, e_t] = SE3errors(g_S_T, g);
 fprintf('Rotational error:%d\n',e_R);
-fprintf('Translational error:%d',e_t);
+fprintf('Translational error:%d\n',e_t);
 pause(0.5);

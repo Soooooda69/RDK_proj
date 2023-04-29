@@ -48,7 +48,8 @@ set(f1, 'WindowStyle', 'modal');
 imshow('ironman.jpg');
 
 disp('*************Press R to record current location*************');
-pose_list = {};
+% Save g_S_tip
+tip_pose_list = {};
 i = 0;
 while (true)
     pause(0.1);
@@ -62,7 +63,7 @@ while (true)
         disp('The current joints configurations:');
         disp(thetas(:,1));
         pause(0.1);
-        pose_list{end+1} = g_S_T;
+        tip_pose_list{end+1} = g_S_T * g_T_tip;
         i = i+1;
         fprintf('%dth current location recorded!\n', i)
         disp('*************Press Q to finish recording*************');
@@ -74,29 +75,44 @@ while (true)
 end
 
 %% IK
-start_pose = pose_list{1};
-mid_pose = pose_list{2};
-end_pose = pose_list{end};
+start_pose = tip_pose_list{1};
+mid_pose = tip_pose_list{2};
+end_pose = tip_pose_list{end};
 disp(start_pose)
 disp(mid_pose)
 disp(end_pose)
-p1 = start_pose(1:3, 4);
-p2 = mid_pose(1:3, 4);
-p3 = end_pose(1:3, 4);
-v1 = p1-p2;
-v2 = p1-p3;
+p1 = start_pose(1:3, 4)';
+p2 = mid_pose(1:3, 4)';
+p3 = end_pose(1:3, 4)';
+
 
 %% Plan the trajectory
 
 % Test config switch
 config='J';
+
+% Plan pose list g_S_T and joints config list
+plan_pose_list = {};
+plan_joints_list = {};
+
 % Test 3 points to define a plane
-p1 = [0, 0.05, 0];
-p2 = [0,0,0];
-p3 = [15, 0, 0];
+% p1 = [0, 0.05, 0];
+% p2 = [0,0,0];
+% p3 = [15, 0, 0];
+
+start_pose = tip_pose_list{1};
+mid_pose = tip_pose_list{2};
+end_pose = tip_pose_list{end};
+% disp(start_pose);
+% disp(mid_pose);
+% disp(end_pose);
+p1 = start_pose(1:3, 4)';
+p2 = mid_pose(1:3, 4)';
+p3 = end_pose(1:3, 4)';
 
 % Trajectory width
 width = 0.05;
+
 % Plan the trajectory for the move
 lines = PlanTraj(p1, p2, p3, width);
 
@@ -106,7 +122,42 @@ else
     len = 3;
 end
 
+% Draw the planned trajectory
 for i=1:len
 plot3(lines{i}(1,:), lines{i}(2,:), lines{i}(3,:), 'r-', 'LineWidth', 1);
 hold on;
 end
+% plot3(lines{1}(1,:), lines{1}(2,:), lines{1}(3,:), 'r-', 'LineWidth', 1);
+% hold on;
+% plot3(lines{2}(1,:), lines{2}(2,:), lines{2}(3,:), 'g-', 'LineWidth', 1);
+% plot3(lines{3}(1,:), lines{3}(2,:), lines{3}(3,:), 'b-', 'LineWidth', 1);
+
+% The start_pose is g_S_tip
+tmp_pose = start_pose;
+
+for i=1:length(lines)
+    for j=1:length(lines{1})
+        tmp_pose(1:3, 4)=lines{i}(:,j);
+        plan_pose_list{end+1}=tmp_pose * inv(g_T_tip);
+        thetas = ur5InvKin(tmp_pose * inv(g_T_tip));
+        plan_joints_list{end+1}=thetas(:,3);
+    end
+end
+
+%% Set UR5 to the start pose
+ur5.move_joints(plan_joints_list{1}-joint_offset,3);
+pause(3);
+
+for i=2:length(plan_joints_list)
+    fprintf('%dth moving\n', i);
+    ur5.move_joints(plan_joints_list{i}-joint_offset,0.05);
+    pause(0.05);
+    tmp_curr = ur5.get_current_transformation('S', 'tip');
+    p = tmp_curr(1:3, 4);
+    scatter3(p(1), p(2), p(3));
+    hold on;
+%     pause(0.1);
+end
+
+
+

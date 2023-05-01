@@ -45,22 +45,22 @@ cornerpoint1 = p1 + 0.1*w;
 [x_values, y_values, z_values] = InterpLine(p1, cornerpoint1, interp_nums);
 line1 = [x_values', y_values', z_values']';
 lines{end+1} = line1;
-% plot3(x_values, y_values, z_values, 'r-', 'LineWidth', 1);
-% hold on;
+plot3(x_values, y_values, z_values, 'r-', 'LineWidth', 1);
+hold on;
 
 % Second trajectory
 cornerpoint2 = cornerpoint1 + width_len*h;
 [x_values, y_values, z_values] = InterpLine(cornerpoint1, cornerpoint2, interp_nums);
 line2 = [x_values', y_values', z_values']';
 lines{end+1} = line2;
-% plot3(x_values, y_values, z_values, 'b-', 'LineWidth', 1);
+plot3(x_values, y_values, z_values, 'b-', 'LineWidth', 1);
 
 % Last trajectory
 cornerpoint3 = cornerpoint2 + width_len*w;
 [x_values, y_values, z_values] = InterpLine(cornerpoint2, cornerpoint3, interp_nums);
 line3 = [x_values', y_values', z_values']';
 lines{end+1} = line3;
-% plot3(x_values, y_values, z_values, 'g-', 'LineWidth', 1);
+plot3(x_values, y_values, z_values, 'g-', 'LineWidth', 1);
 
 % lines = [line1, line2, line3];
 end

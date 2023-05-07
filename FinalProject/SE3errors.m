@@ -15,5 +15,6 @@ rd = gd(1:3 ,4);
 
 d_SO3 = sqrt(trace((R - Rd) * (R - Rd)'));
 d_R3 = norm(r - rd);
-
+fprintf('Translational error: %d\n', d_R3);
+fprintf('Rotational error: %d\n', d_SO3);
 end

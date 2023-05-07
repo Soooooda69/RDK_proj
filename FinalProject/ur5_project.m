@@ -132,6 +132,12 @@ end
 ur5.move_joints(plan_joints_list{1}-joint_offset,3);
 pause(3);
 
+% Start error
+disp('**************Error analysis for the start location**************')
+[d_SO3, d_R3] = SE3errors(ur5.get_current_transformation('S', 'tip'), ...
+    plan_pose_list{1});
+
+% Move the UR5 with IK solution
 for i=1:len
 plot3(lines{i}(1,:), lines{i}(2,:), lines{i}(3,:), 'r-', 'LineWidth', 1);
 hold on;
@@ -139,8 +145,8 @@ end
 
 for i=2:length(plan_joints_list)
     fprintf('%dth moving\n', i);
-    ur5.move_joints(plan_joints_list{i}-joint_offset,0.05);
-    pause(0.05);
+    ur5.move_joints(plan_joints_list{i}-joint_offset,0.1);
+    pause(0.1);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
     p = tmp_curr(1:3, 4);
     scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
@@ -148,5 +154,8 @@ for i=2:length(plan_joints_list)
 %     pause(0.1);
 end
 
-
+% Target error
+disp('**************Error analysis for the target location**************')
+[d_SO3, d_R3] = SE3errors(ur5.get_current_transformation('S', 'tip'), ...
+    plan_pose_list{end});
 

@@ -30,17 +30,23 @@ tip_frame = tf_frame('S','tip',g_S_tip);
 pause(0.5);
 
 %% Place the UR5 end effector to near plane
-% TODO: Safety check is needed
-% % Should get the practical position as the initial pose
-% % 
-% % gst1 = ur5.get_current_transformation('S', 'tip');
+
+% Should get the practical position as the initial pose
+% 
+% gst1 = ur5.get_current_transformation('S', 'tip');
 gst1 = [ROTZ(-pi/4)*ROTY(pi/5), [0.3, -0.4, 0.22]'; 0,0,0,1];
+
 tip_frame.move_frame('T', g_T_tip);
 thetas = ur5InvKin(gst1);
-ur5.move_joints(thetas(:,3)-joint_offset,5);
+start_joints_config = thetas(:,3)-joint_offset;
+ur5.move_joints(start_joints_config,5);
 pause(5);
 
 %% Get the start and end
+% For this section, use the moving panel in simulation to find three points
+% defining a plane which you want to draw the trajectory to. The first and 
+% the last point define the start and target point respectively.
+
 clc;
 % Show an ironman face as the user interface
 f1 = figure;
@@ -77,7 +83,7 @@ end
 %% Plan the trajectory
 
 % Test config switch
-config='J';
+config='IK';
 
 % Plan pose list g_S_T and joints config list
 plan_pose_list = {};
@@ -145,8 +151,8 @@ end
 
 for i=2:length(plan_joints_list)
     fprintf('%dth moving\n', i);
-    ur5.move_joints(plan_joints_list{i}-joint_offset,0.1);
-    pause(0.1);
+    ur5.move_joints(plan_joints_list{i}-joint_offset,0.01);
+    pause(0.01);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
     p = tmp_curr(1:3, 4);
     scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
@@ -159,3 +165,6 @@ disp('**************Error analysis for the target location**************')
 [d_SO3, d_R3] = SE3errors(ur5.get_current_transformation('S', 'tip'), ...
     plan_pose_list{end});
 
+% Finished drawing, set UR5 back to the near plane joints configuration.
+ur5.move_joints(start_joints_config,5);
+pause(5);

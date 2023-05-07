@@ -32,7 +32,11 @@ function Jb = ur5BodyJacobian(theta_vec)
         for j=i:6
             g_tmp = g_tmp*twist2mat(xi(:, j), theta_vec(j));
         end
-        adj_tmp = adj(g_tmp*gst0);
+        G = g_tmp*gst0;
+        R = G(1:3,1:3);
+        p = G(1:3,4);
+        pskew = [0, -p(3), p(2); p(3), 0, -p(1); -p(2), p(1), 0];
+        adj_tmp = [R, pskew*R; zeros(3), R];
         if det(adj_tmp) == 0
             disp('The adjoint matrix is singular.');
             % Use pseudoinverse or regularization

@@ -153,7 +153,7 @@ for i=2:length(plan_joints_list)
     ur5.move_joints(plan_joints_list{i}-joint_offset,0.05);
     pause(0.05);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
-    p = tmp_curr(1:3, 4);
+    p = tmp_curr(1:3, 4)
     scatter3(p(1), p(2), p(3));
     hold on;
 %     pause(0.1);

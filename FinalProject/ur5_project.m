@@ -30,7 +30,7 @@ tip_frame = tf_frame('S','tip',g_S_tip);
 pause(0.5);
 
 %% Place the UR5 end effector to near plane
-
+% TODO: Safety check is needed
 % % Should get the practical position as the initial pose
 % % 
 % % gst1 = ur5.get_current_transformation('S', 'tip');
@@ -74,18 +74,6 @@ while (true)
     end
 end
 
-%% IK
-start_pose = tip_pose_list{1};
-mid_pose = tip_pose_list{2};
-end_pose = tip_pose_list{end};
-disp(start_pose)
-disp(mid_pose)
-disp(end_pose)
-p1 = start_pose(1:3, 4)';
-p2 = mid_pose(1:3, 4)';
-p3 = end_pose(1:3, 4)';
-
-
 %% Plan the trajectory
 
 % Test config switch
@@ -94,11 +82,6 @@ config='J';
 % Plan pose list g_S_T and joints config list
 plan_pose_list = {};
 plan_joints_list = {};
-
-% Test 3 points to define a plane
-% p1 = [0, 0.05, 0];
-% p2 = [0,0,0];
-% p3 = [15, 0, 0];
 
 start_pose = tip_pose_list{1};
 mid_pose = tip_pose_list{2};
@@ -144,9 +127,15 @@ for i=1:length(lines)
     end
 end
 
-%% Set UR5 to the start pose
+%% IK solution
+% Set UR5 to the start pose
 ur5.move_joints(plan_joints_list{1}-joint_offset,3);
 pause(3);
+
+for i=1:len
+plot3(lines{i}(1,:), lines{i}(2,:), lines{i}(3,:), 'r-', 'LineWidth', 1);
+hold on;
+end
 
 for i=2:length(plan_joints_list)
     fprintf('%dth moving\n', i);
@@ -154,7 +143,7 @@ for i=2:length(plan_joints_list)
     pause(0.05);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
     p = tmp_curr(1:3, 4);
-    scatter3(p(1), p(2), p(3));
+    scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
     hold on;
 %     pause(0.1);
 end

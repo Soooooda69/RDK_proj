@@ -1,9 +1,9 @@
-function lines = PlanTraj(p1, p2, p3, width_len)
+function lines = PlanTraj(p1, p2, p3, hight_len)
 % Inputs:
 %   - p1: 1x3 start point.
 %   - p2: 1x3 intermidiate point.
 %   - p3: 1x3 target point.
-%   - width_len: Length of the width.
+%   - hight_len: Length of the width.
 % Outputs:
 %   - lines: 3xN line trajectory.
 lines = {};
@@ -18,10 +18,10 @@ u = (p3-p1) / d;
 v = cross(n, u);
 
 % solve the rectangle width vector and the height vector
-% width_len = 0.05;
+% hight_len = 0.05;
 syms wx wy wz hx hy hz
 w = [wx, wy, wz];
-eqns_w = [dot(u,w) == sqrt(d*d-width_len*width_len)/d, dot(n,w) == 0, norm(w)==1];
+eqns_w = [dot(u,w) == sqrt(d*d-hight_len*hight_len)/d, dot(n,w) == 0, norm(w)==1];
 sol_w = solve(eqns_w, w);
 w = double([sol_w.wx, sol_w.wy, sol_w.wz]);
 if (dot(v,w(1,:)) < 0)
@@ -30,7 +30,7 @@ else
     w = w(2,:);
 end
 h = [hx, hy, hz];
-eqns_h = [dot(u,h) == width_len/d, dot(n,h) == 0, norm(h)==1];
+eqns_h = [dot(u,h) == hight_len/d, dot(n,h) == 0, norm(h)==1];
 sol_h = solve(eqns_h, h);
 h = double([sol_h.hx, sol_h.hy, sol_h.hz]);
 if (dot(v,h(1,:)) > 0)
@@ -49,14 +49,14 @@ plot3(x_values, y_values, z_values, 'r-', 'LineWidth', 1);
 hold on;
 
 % Second trajectory
-cornerpoint2 = cornerpoint1 + width_len*h;
+cornerpoint2 = cornerpoint1 + hight_len*h;
 [x_values, y_values, z_values] = InterpLine(cornerpoint1, cornerpoint2, interp_nums);
 line2 = [x_values', y_values', z_values']';
 lines{end+1} = line2;
 plot3(x_values, y_values, z_values, 'b-', 'LineWidth', 1);
 
 % Last trajectory
-cornerpoint3 = cornerpoint2 + width_len*w;
+cornerpoint3 = cornerpoint2 + hight_len*w;
 [x_values, y_values, z_values] = InterpLine(cornerpoint2, cornerpoint3, interp_nums);
 line3 = [x_values', y_values', z_values']';
 lines{end+1} = line3;

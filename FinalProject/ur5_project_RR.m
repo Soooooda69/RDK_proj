@@ -3,7 +3,7 @@ clear;
 clc;
 rosshutdown;
 ur5 = ur5_interface();
-joint_offset = [-pi 0 0 0 0 0]';
+
 % Set UR5 back to home pose
 joints = [0 0 0 0 0 0]';
 ur5.move_joints(joints,10);
@@ -35,9 +35,10 @@ pause(0.5);
 % % 
 % % gst1 = ur5.get_current_transformation('S', 'tip');
 gst1 = [ROTZ(-pi/4)*ROTY(pi/5), [0.3, -0.4, 0.22]'; 0,0,0,1];
+joint_offset = [-pi 0 0 0 0 0]';
 tip_frame.move_frame('T', g_T_tip);
 thetas = ur5InvKin(gst1);
-ur5.move_joints(thetas(:,3)-joint_offset,5);
+ur5.move_joints(thetas(:,3) - joint_offset,15);
 pause(5);
 
 %% Get the start and end
@@ -59,13 +60,13 @@ while (true)
     if strcmpi(keyPress,'r')
         % Reset the current pressed key
         set(gcf, 'CurrentCharacter', '1');
-        g_S_T = ur5.get_current_transformation('S', 'T')
+        g_S_T = ur5.get_current_transformation('S', 'tip');
         %thetas = ur5InvKin(g_S_T);
         joint_list = [joint_list, ur5.get_current_joints];
         disp('The current joints configurations:');
         disp(thetas(:,1));
         pause(0.1);
-        tip_pose_list{end+1} = g_S_T * g_T_tip;
+        tip_pose_list{end+1} = g_S_T;
         i = i+1;
         fprintf('%dth current location recorded!\n', i)
         disp('*************Press Q to finish recording*************');
@@ -89,28 +90,6 @@ p3 = end_pose(1:3, 4)';
 
 %% Plan the trajectory
 
-% Test config switch
-config='J';
-
-% Plan pose list g_S_T and joints config list
-plan_pose_list = {};
-plan_joints_list = {};
-
-% Test 3 points to define a plane
-% p1 = [0, 0.05, 0];
-% p2 = [0,0,0];
-% p3 = [15, 0, 0];
-
-start_pose = tip_pose_list{1} * inv(g_T_tip);
-mid1_pose = tip_pose_list{2} * inv(g_T_tip);
-end_pose = tip_pose_list{end} * inv(g_T_tip);
-% disp(start_pose);
-% disp(mid_pose);
-% disp(end_pose);
-p1 = start_pose(1:3, 4)';
-p2 = mid_pose(1:3, 4)';
-p3 = end_pose(1:3, 4)';
-
 % Trajectory width
 width = 0.05;
 
@@ -132,40 +111,41 @@ scatter3(pos1(1), pos1(2), pos1(3));
 scatter3(pos2(1), pos2(2), pos2(3));
 scatter3(endpos(1), endpos(2), endpos(3));
 hold on
-pause(10);
+pause(6);
 
 %% move
 % first segment
 cur_p = startpos;
 cur_j = startjoint;
 v = (pos1 - cur_p);
-dt = 0.6;
+dt = 0.3;
 
-while norm(pos1 - cur_p) > 0.008
-    j = jacobian_ur5(cur_j);
+while norm(pos1 - cur_p) > 0.005
+    j = jacobian_ur5(cur_j, g_T_tip);
     next_j = cur_j - dt * pinv(j) * v;
     % next_j = cur_j - dt * j' * v;
-    ur5.move_joints(next_j,10);
+    ur5.move_joints(next_j,2);
     pause(0.5);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('S', 'T');
-    cur_p = cur_g(1:3,4)
+    cur_g = ur5.get_current_transformation('S', 'tip');
+    cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
     v = (pos1 - cur_p);
 end
+%%
 
 % second segment
 v = (pos2 - pos1);
-while norm(cur_p - pos2) >= 0.008
-    j = jacobian_ur5(cur_j);
+while norm(cur_p - pos2) >= 0.005
+    j = jacobian_ur5(cur_j, g_T_tip);
     next_j = cur_j - dt * pinv(j) * v;
     % next_j = cur_j - dt * j' * v;
     ur5.move_joints(next_j,8);
     pause(0.5);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('S', 'T');
-    cur_p = cur_g(1:3,4)
+    cur_g = ur5.get_current_transformation('S', 'tip');
+    cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
     v = (pos2 - cur_p);
@@ -173,15 +153,15 @@ end
 
 % third segment
 v = (endpos - pos2);
-while norm(cur_p - endpos) >= 0.008
-    j = jacobian_ur5(cur_j);
+while norm(cur_p - endpos) >= 0.005
+    j = jacobian_ur5(cur_j, g_T_tip);
     next_j = cur_j - dt * pinv(j) * v;
     %next_j = cur_j - dt * j' * v;
     ur5.move_joints(next_j,8);
     pause(0.5);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('S', 'T');
-    cur_p = cur_g(1:3,4)
+    cur_g = ur5.get_current_transformation('S', 'tip');
+    cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
     v = (endpos - cur_p);

@@ -1,5 +1,5 @@
 %% Start and initialize
-% clear;
+clear;
 clc;
 rosshutdown;
 ur5 = ur5_interface();

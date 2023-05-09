@@ -7,12 +7,13 @@ ur5 = ur5_interface();
 % Set UR5 back to home pose
 ur5.move_joints([0 0 0 0 0 0]',3);
 pause(3);
-joint_offset = [-pi 0 0 0 0 0]';
+joint_offset = [-pi/2 -pi/2 0 -pi/2 0 0]';
+% joint_offset = [-pi/2 0 0 0 0 0]';
 joints = [pi/1 pi/5 -pi/5 pi/4 0 pi/2]';
 g_S_T = ur5FwdKin(joints);
 
 %transformation from keating base to {S}, g_0->S
-g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];  
+g_baseK_S = [ROTZ(-pi/2) [0 0 0.0892]'; 0 0 0 1];  
 %-90 degree rotation around z and up x 0.0892 
 tf_frame('base_link','S',g_baseK_S);
 pause(0.5);
@@ -24,12 +25,11 @@ tf_frame('tool0','T',inv(g_T_toolK));
 pause(0.5);
 
 %transformation from keating base to keating tool
-% g_06 = g_0S * g_ST * g_T6
-g_06 = g_baseK_S*g_S_T*g_T_toolK;
 tf_frame('S','T2',g_S_T);
 pause(0.5);
 
 thetas = ur5InvKin(g_S_T);
+disp(thetas-joint_offset)
 ur5.move_joints(thetas(:,6)-joint_offset,3);
 pause(5);
 

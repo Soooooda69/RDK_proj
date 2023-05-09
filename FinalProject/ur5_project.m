@@ -1,12 +1,13 @@
 %% Start and initialize
-clear;
+% clear;
 clc;
 rosshutdown;
 ur5 = ur5_interface();
-joint_offset = [-pi 0 0 0 0 0]';
+% joint_offset = [pi/2 0 0 0 0 0]';
+joint_offset = [pi/2 pi/2 0 pi/2 0 0]';
 % Set UR5 back to home pose
 joints = [0 0 0 0 0 0]';
-ur5.move_joints(joints,3);
+ur5.move_joints(joints+joint_offset,3);
 
 %transformation from keating base to {S}, g_0->S
 g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];  
@@ -27,20 +28,22 @@ g_T_tip = [eye(3), [0.12228, 0, 0.049]'; 0,0,0,1];
 g_S_T = ur5FwdKin(joints);
 g_S_tip = g_S_T * g_T_tip;
 tip_frame = tf_frame('S','tip',g_S_tip);
+tip_frame.move_frame('T', g_T_tip);
 pause(0.5);
 
 %% Place the UR5 end effector to near plane
 
 % Should get the practical position as the initial pose
 % 
-% gst1 = ur5.get_current_transformation('S', 'tip');
-gst1 = [ROTZ(-pi/4)*ROTY(pi/5), [0.3, -0.4, 0.22]'; 0,0,0,1];
+gst1 = ur5.get_current_transformation('S', 'T');
+% gst1 = [ROTZ(-pi/4)*ROTY(pi/5), [0.3, -0.4, 0.22]'; 0,0,0,1];
 
-tip_frame.move_frame('T', g_T_tip);
-thetas = ur5InvKin(gst1);
-start_joints_config = thetas(:,3)-joint_offset;
-ur5.move_joints(start_joints_config,5);
-pause(5);
+% tip_frame.move_frame('T', g_T_tip);
+% thetas = ur5InvKin(gst1);
+% start_joints_config = thetas(:,3)+joint_offset;
+start_joints_config = ur5.get_current_joints();
+% ur5.move_joints(start_joints_config+joint_offset,5);
+% pause(5);
 
 %% Get the start and end
 % For this section, use the moving panel in simulation to find three points
@@ -65,9 +68,9 @@ while (true)
         % Reset the current pressed key
         set(gcf, 'CurrentCharacter', '1');
         g_S_T = ur5.get_current_transformation('S', 'T');  
-        thetas = ur5InvKin(g_S_T);
-        disp('The current joints configurations:');
-        disp(thetas(:,1));
+%         thetas = ur5InvKin(g_S_T);
+        disp('The current ee location:');
+        disp(g_S_T(1:3, 4));
         pause(0.1);
         tip_pose_list{end+1} = g_S_T * g_T_tip;
         i = i+1;
@@ -124,24 +127,42 @@ end
 % The start_pose is g_S_tip
 tmp_pose = start_pose;
 
+% Find the closest start joints configuration
+idx=-1;
+min=inf;
+thetas_start = ur5InvKin(tmp_pose * inv(g_T_tip));
+curr_theta = ur5.get_current_joints();
+for i=1:8
+    tmp = norm(thetas_start(:, i) +[pi 0 0 0 0 0]' - curr_theta);
+    disp(tmp)
+    if (min>tmp)
+        min = tmp;
+        idx = i;
+    end
+end
+fprintf('\n The closest start joints configuration idx: %d \n', idx)
+
 for i=1:length(lines)
     for j=1:length(lines{1})
         tmp_pose(1:3, 4)=lines{i}(:,j);
         plan_pose_list{end+1}=tmp_pose * inv(g_T_tip);
         thetas = ur5InvKin(tmp_pose * inv(g_T_tip));
-        plan_joints_list{end+1}=thetas(:,3);
+        plan_joints_list{end+1}=thetas(:,idx);
     end
 end
 
 %% IK solution
 % Set UR5 to the start pose
-ur5.move_joints(plan_joints_list{1}-joint_offset,3);
-pause(3);
-
+% ur5.move_joints(start_joints_config,10);
+% jt = ur5InvKin(start_pose * inv(g_T_tip));
+% ur5.move_joints(jt(:, 1), 10);
+ur5.move_joints(plan_joints_list{1}+[pi 0 0 0 0 0]',10);
+pause(10);
+%%
 % Start error
 disp('**************Error analysis for the start location**************')
 [d_SO3, d_R3] = SE3errors(ur5.get_current_transformation('S', 'tip'), ...
-    plan_pose_list{1});
+    plan_pose_list{1}*g_T_tip);
 
 % Move the UR5 with IK solution
 for i=1:len
@@ -151,8 +172,8 @@ end
 
 for i=2:length(plan_joints_list)
     fprintf('%dth moving\n', i);
-    ur5.move_joints(plan_joints_list{i}-joint_offset,0.01);
-    pause(0.01);
+    ur5.move_joints(plan_joints_list{i}+[pi 0 0 0 0 0]',0.1);
+    pause(0.1);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
     p = tmp_curr(1:3, 4);
     scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
@@ -163,8 +184,8 @@ end
 % Target error
 disp('**************Error analysis for the target location**************')
 [d_SO3, d_R3] = SE3errors(ur5.get_current_transformation('S', 'tip'), ...
-    plan_pose_list{end});
+    plan_pose_list{end}*g_T_tip);
 
 % Finished drawing, set UR5 back to the near plane joints configuration.
-ur5.move_joints(start_joints_config,5);
+ur5.move_joints(start_joints_config,10);
 pause(5);

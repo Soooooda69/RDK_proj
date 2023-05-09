@@ -1,4 +1,4 @@
-function [ theta ] = ur5InvKin( gd )
+function [ theta ] = ur5InvKin_( gd )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% UR5INV - Long Qian   %%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,17 +15,15 @@ function [ theta ] = ur5InvKin( gd )
         msg ='ur5invKin function: Wrong input format, must be a 4x4 matrix';
         error(msg);
     end
-    g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];
-    g_T_toolK = [ROTX(-pi/2)*ROTY(pi/2) [0 0 0]'; 0 0 0 1];
-    gd = g_baseK_S*gd*g_T_toolK;
+
     theta = zeros(6, 8);
     % DH parameters
-    d1 = 0.08916;
+    d1 = 0.0892;
     d2 = 0;
     d3 = 0;
-    d4 = 0.10915;
-    d5 = 0.09465;
-    d6 = 0.0823;
+    d4 = 0.1093;
+    d5 = 0.09475;
+    d6 = 0.0825;
     a1 = 0;
     a2 = -0.425;
     a3 = -0.392;
@@ -107,10 +105,6 @@ function [ theta ] = ur5InvKin( gd )
         theta(4, c) = atan2(T34(2,1), T34(1,1));
     end
     theta = real(theta);
-    offset = [0;pi/2;0;pi/2;0;0];
-    for j=1:8
-        theta(:,j) = theta(:,j)+offset;
-    end
     
     for j=1:8
         theta(1,j) = theta(1,j)-pi;

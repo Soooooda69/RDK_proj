@@ -146,54 +146,55 @@ pause(6);
 cur_g = startpose;
 cur_p = cur_g(1:3,4);
 cur_j = startjoint;
-dt = 0.3;
-v = Xi(pinv(pose1)*cur_g) / 10;
-while norm(pos1 - cur_p) > 0.001
+dt = 0.001;
+v = getXi(pinv(pose1)*cur_g);
+while norm(pos1 - cur_p) > 0.0005
     j = ur5BodyJacobian(cur_j);
     next_j = cur_j - dt * pinv(j) * v;
     %next_j = cur_j + dt * j' * v;
-    ur5.move_joints(next_j,0.5);
-    pause(1);
+    ur5.move_joints(next_j,5);
+    pause(0.5);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('base_link', 'tool0');
+    %cur_g = ur5.get_current_transformation('base_link', 'tool0');
+    cur_g = ur
     cur_p = cur_g(1:3,4)
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
-    v = Xi(pinv(pose1)*cur_g) / 10;
+    v = getXi(pinv(pose1) \ cur_g);
 end
 
 %%
 
 % second segment
-v = Xi(pinv(pose2)*cur_g);
-while norm(cur_p - pos2) >= 0.001
-    j = ur5BodyJacobian(cur_j);
-    next_j = cur_j - dt * pinv(j) * v;
+v = (pos2 - pos1);
+while norm(cur_p - pos2) >= 0.0005
+    j = jacobian_ur5(cur_j, g_tool_tip);
+    next_j = cur_j + dt * pinv(j) * v;
     % next_j = cur_j - dt * j' * v;
     ur5.move_joints(next_j,0.5);
-    pause(0.5);
+    pause(0.2);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('base_link', 'tool0');
+    cur_g = ur5.get_current_transformation('base_link', 'tool0')* g_tool_tip;
     cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
-    v = Xi(pinv(pose2)*cur_g);
+    v = (pos2 - cur_p);
 end
 
 %%
 % third segment
-v = Xi(pinv(endpose)*cur_g);
+v = (endpos - pos2);
 while norm(cur_p - endpos) >= 0.001
-    j = ur5BodyJacobian(cur_j);
-    next_j = cur_j - dt * pinv(j) * v;
+    j = jacobian_ur5(cur_j, g_tool_tip)
+    next_j = cur_j + dt * pinv(j) * v;
     %next_j = cur_j - dt * j' * v;
-    ur5.move_joints(next_j,0.5);
+    ur5.move_joints(next_j,8);
     pause(0.5);
     cur_j = ur5.get_current_joints();
-    cur_g = ur5.get_current_transformation('base_link', 'tool0');
+    cur_g = ur5.get_current_transformation('base_link', 'tool0')* g_tool_tip;
     cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
-    v = Xi(pinv(endpose)*cur_g);
+    v = (endpos - cur_p);
 end
 

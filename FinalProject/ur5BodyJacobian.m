@@ -1,4 +1,4 @@
-function Jb = ur5BodyJacobian(theta_vec)
+function Jb = ur5BodyJacobian(theta_vec, gtip)
 
     % geometry of UR5 in meters
     L0 =0.0892; L1 = 0.425; L2 = 0.392; L3 = 0.1093; L4 = 0.09475; L5 = 0.0825;
@@ -22,7 +22,7 @@ function Jb = ur5BodyJacobian(theta_vec)
     g = [g1, g2, g3, g4, g5, g6];
 
     % forward kinematics
-    gstTheta = g1*g2*g3*g4*g5*g6*gst0;
+    gstTheta = g1*g2*g3*g4*g5*g6*gst0*gtip;
     
     % body jacobian
     Jb = zeros(6,6);

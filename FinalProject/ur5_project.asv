@@ -143,19 +143,17 @@ end
 %%
 cur_joint = joint_list(:,1);
 startpose = tip_pose_list{1};
-startpos = startpose(1:3, 4);
-path = load("jhu.mat");
-s = size(path.data);
+startpos = startpose(1:3, 4)';
+path = load("ironman.mat");
+s = size(path);
 joints = [];
-for i = 1 : 30 : s(1)
-    dx = -path.data(i,1) / 5000;
-    dy = path.data(i,2) / 5000;
+for i = 1 : s(1)
+    dx = -path(i,1) / 3000;
+    dy = path(i,2) / 3000;
     dz = 0;
     tmp_pose = startpose;
     tmp_pose(1:3,4) = startpos + [dx;dy;dz];
     thetas = ur5InvKin(tmp_pose);
-    idx=-1;
-    min=inf;
     for k=1:8
         tmp = norm(thetas(:,k)-joint_offset-cur_joint);
         if (min>tmp)
@@ -166,13 +164,12 @@ for i = 1 : 30 : s(1)
     joints = [joints thetas(:,idx)];
 end
 for i=1:length(joints)
-    ur5.move_joints(joints(:,i) - joint_offset,0.5);
+    ur5.move_joints(joints(i) - joint_offset,0.5);
     pause(0.5);
     tmp_curr = ur5.get_current_transformation('base_link','tool0');
     p = tmp_curr(1:3, 4);
     scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
     hold on;
-    i
 end
     
 

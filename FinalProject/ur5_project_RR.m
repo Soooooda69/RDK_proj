@@ -107,23 +107,7 @@ pose2(1:3,4) = pos2;
 endpose = start_pose;
 endpose(1:3,4) = endpos;
 
-
-interp_nums = 30;
-% First trajectory
-[x_values, y_values, z_values] = InterpLine(startpos, pos1, interp_nums);
-line1 = [x_values', y_values', z_values']';
-plot3(x_values, y_values, z_values, 'r-', 'LineWidth', 1);
-hold on;
-
-% Second trajectory
-[x_values, y_values, z_values] = InterpLine(pos1, pos2, interp_nums);
-line2 = [x_values', y_values', z_values']';
-plot3(x_values, y_values, z_values, 'b-', 'LineWidth', 1);
-
-% Last trajectory
-[x_values, y_values, z_values] = InterpLine(pos2, endpos, interp_nums);
-line3 = [x_values', y_values', z_values']';
-plot3(x_values, y_values, z_values, 'g-', 'LineWidth', 1);
+lines = PlanTraj(startpos, pos1, pos2, endpos);
 
 %% Move to initial positioln
 

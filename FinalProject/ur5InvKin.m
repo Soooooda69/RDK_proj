@@ -15,10 +15,6 @@ function [ theta ] = ur5InvKin( gd )
         msg ='ur5invKin function: Wrong input format, must be a 4x4 matrix';
         error(msg);
     end
-    g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];
-    g_T_toolK = [ROTX(-pi/2)*ROTY(pi/2) [0 0 0]'; 0 0 0 1];
-    gd = g_baseK_S*gd*g_T_toolK;
-    theta = zeros(6, 8);
     % DH parameters
     d1 = 0.08916;
     d2 = 0;

@@ -7,7 +7,7 @@ ur5 = ur5_interface();
 joint_offset = [pi/2 pi/2 0 pi/2 0 0]';
 % Set UR5 back to home pose
 joints = [0 0 0 0 0 0]';
-ur5.move_joints(joints+joint_offset,3);
+ur5.move_joints(joints-joint_offset,50);
 
 %transformation from keating base to {S}, g_0->S
 g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];  
@@ -42,6 +42,7 @@ gst1 = ur5.get_current_transformation('S', 'T');
 % thetas = ur5InvKin(gst1);
 % start_joints_config = thetas(:,3)+joint_offset;
 start_joints_config = ur5.get_current_joints();
+
 % ur5.move_joints(start_joints_config+joint_offset,5);
 % pause(5);
 
@@ -69,6 +70,7 @@ while (true)
         set(gcf, 'CurrentCharacter', '1');
         g_S_T = ur5.get_current_transformation('S', 'T');  
 %         thetas = ur5InvKin(g_S_T);
+        joint_list = [joint_list, ur5.get_current_joints];
         disp('The current ee location:');
         disp(g_S_T(1:3, 4));
         pause(0.1);
@@ -102,28 +104,33 @@ p1 = start_pose(1:3, 4)';
 p2 = mid_pose(1:3, 4)';
 p3 = end_pose(1:3, 4)';
 
+startpos = p1';
+pos1 = startpos + [2/3 * (p3(1) - p1(1)) 0 0]';
+% pos1 = startpos + [0 2/3 * (p3(2) - p1(2)) 0]';
+pos2 = [pos1(1); p3(2); pos1(3)];
+endpos = [p3(1);p3(2);p1(3)];
+
+% [pos1, pos2] = getPath_init(startpos*1000, endpos*1000);
+
+startpose = start_pose;
+
+pose1 = start_pose;
+pose1(1:3,4) = pos1;
+
+
+pose2 = start_pose;
+pose2(1:3,4) = pos2;
+
+
+endpose = start_pose;
+endpose(1:3,4) = endpos;
+
 % Trajectory width
 width = 0.05;
 
 % Plan the trajectory for the move
-lines = PlanTraj(p1, p2, p3, width);
-
-if (config=='JT')
-    len = 1;
-else
-    len = 3;
-end
-
-% Draw the planned trajectory
-for i=1:len
-plot3(lines{i}(1,:), lines{i}(2,:), lines{i}(3,:), 'r-', 'LineWidth', 1);
-hold on;
-end
-% plot3(lines{1}(1,:), lines{1}(2,:), lines{1}(3,:), 'r-', 'LineWidth', 1);
-% hold on;
-% plot3(lines{2}(1,:), lines{2}(2,:), lines{2}(3,:), 'g-', 'LineWidth', 1);
-% plot3(lines{3}(1,:), lines{3}(2,:), lines{3}(3,:), 'b-', 'LineWidth', 1);
-
+lines = PlanTraj(startpos, pos1, pos2, endpos);
+%%
 % The start_pose is g_S_tip
 tmp_pose = start_pose;
 
@@ -132,8 +139,9 @@ idx=-1;
 min=inf;
 thetas_start = ur5InvKin(tmp_pose * inv(g_T_tip));
 curr_theta = ur5.get_current_joints();
+
 for i=1:8
-    tmp = norm(thetas_start(:, i) +[pi 0 0 0 0 0]' - curr_theta);
+    tmp = norm(thetas_start(:, i) -joint_offset - curr_theta+joint_offset);
     disp(tmp)
     if (min>tmp)
         min = tmp;
@@ -153,10 +161,10 @@ end
 
 %% IK solution
 % Set UR5 to the start pose
-% ur5.move_joints(start_joints_config,10);
+% ur5.move_joints(start_joints_config-joint_offset,10);
 % jt = ur5InvKin(start_pose * inv(g_T_tip));
 % ur5.move_joints(jt(:, 1), 10);
-ur5.move_joints(plan_joints_list{1}+[pi 0 0 0 0 0]',10);
+ur5.move_joints(plan_joints_list{1}-joint_offset,10);
 pause(10);
 %%
 % Start error
@@ -172,7 +180,7 @@ end
 
 for i=2:length(plan_joints_list)
     fprintf('%dth moving\n', i);
-    ur5.move_joints(plan_joints_list{i}+[pi 0 0 0 0 0]',0.1);
+    ur5.move_joints(plan_joints_list{i}-joint_offset,0.1);
     pause(0.1);
     tmp_curr = ur5.get_current_transformation('S', 'tip');
     p = tmp_curr(1:3, 4);
@@ -187,5 +195,5 @@ disp('**************Error analysis for the target location**************')
     plan_pose_list{end}*g_T_tip);
 
 % Finished drawing, set UR5 back to the near plane joints configuration.
-ur5.move_joints(start_joints_config,10);
+ur5.move_joints(start_joints_config-joint_offset,10);
 pause(5);

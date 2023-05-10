@@ -8,7 +8,7 @@ ur5 = ur5_interface();
 % Set UR5 back to home pose
 joints = [0 0 0 0 0 0]';
 joint_offset = [0 -pi/2 0 -pi/2 0 0]';
-ur5.move_joints(joints,10);
+ur5.move_joints(joints + joint_offset,10);
 
 % %transformation from keating base to {S}, g_0->S
 % g_baseK_S = [ROTZ(0) [0 0 0.0892]'; 0 0 0 1];  
@@ -87,10 +87,12 @@ width = 0.05;
 % lines = PlanTraj(p1, p2, p3, width);
 % 
 startpos = p1';
-% pos1 = startpos + [0 0 2/3 * (p3(3) - p1(3))]';
-pos1 = startpos + [0 2/3 * (p3(2) - p1(2)) 0]';
-pos2 = pos1 + [p3(1)-p1(1) 0 0]';
-endpos = p3';
+pos1 = startpos + [2/3 * (p3(1) - p1(1)) 0 0]';
+% pos1 = startpos + [0 2/3 * (p3(2) - p1(2)) 0]';
+pos2 = [pos1(1); p3(2); pos1(3)];
+endpos = [p3(1);p3(2);p1(3)];
+
+% [pos1, pos2] = getPath_init(startpos*1000, endpos*1000);
 
 startpose = start_pose;
 
@@ -143,36 +145,39 @@ pause(6);
 
 %% move
 % first segment
+pose1 = end_pose;
+pos1 = endpos;
 cur_g = startpose;
 cur_p = cur_g(1:3,4);
-cur_j = startjoint;
-dt = 0.3;
-v = Xi(pinv(pose1)*cur_g) / 10;
-while norm(pos1 - cur_p) > 0.001
-    j = ur5BodyJacobian(cur_j);
-    next_j = cur_j - dt * pinv(j) * v;
-    %next_j = cur_j + dt * j' * v;
-    ur5.move_joints(next_j,0.5);
+cur_j = startjoint - joint_offset;
+dt = 0.1;
+v = Xi(pinv(pose1)*cur_g);
+while norm(pos1 - cur_p) > 0.005
+%     j = ur5BodyJacobian(cur_j);
+    %next_j = cur_j - dt * pinv(j) * v;
+    next_j = cur_j - dt * j' * v;
+    ur5.move_joints(next_j + joint_offset,0.5);
     pause(1);
-    cur_j = ur5.get_current_joints();
+    cur_j = ur5.get_current_joints() - joint_offset;
     cur_g = ur5.get_current_transformation('base_link', 'tool0');
     cur_p = cur_g(1:3,4)
     scatter3(cur_p(1), cur_p(2), cur_p(3));
     hold on
-    v = Xi(pinv(pose1)*cur_g) / 10;
+    v = Xi(pinv(pose1)*cur_g);
 end
 
 %%
 
 % second segment
 v = Xi(pinv(pose2)*cur_g);
-while norm(cur_p - pos2) >= 0.001
+dt = 0.5;
+while norm(cur_p - pos2) >= 0.003
     j = ur5BodyJacobian(cur_j);
-    next_j = cur_j - dt * pinv(j) * v;
-    % next_j = cur_j - dt * j' * v;
-    ur5.move_joints(next_j,0.5);
+    %next_j = cur_j - dt * pinv(j) * v;
+    next_j = cur_j - dt * j' * v;
+    ur5.move_joints(next_j + joint_offset,0.5);
     pause(0.5);
-    cur_j = ur5.get_current_joints();
+    cur_j = ur5.get_current_joints()- joint_offset;
     cur_g = ur5.get_current_transformation('base_link', 'tool0');
     cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));
@@ -183,13 +188,14 @@ end
 %%
 % third segment
 v = Xi(pinv(endpose)*cur_g);
+dt = 0.5;
 while norm(cur_p - endpos) >= 0.001
     j = ur5BodyJacobian(cur_j);
     next_j = cur_j - dt * pinv(j) * v;
     %next_j = cur_j - dt * j' * v;
-    ur5.move_joints(next_j,0.5);
+    ur5.move_joints(next_j+ joint_offset,0.5);
     pause(0.5);
-    cur_j = ur5.get_current_joints();
+    cur_j = ur5.get_current_joints()-joint_offset;
     cur_g = ur5.get_current_transformation('base_link', 'tool0');
     cur_p = cur_g(1:3,4);
     scatter3(cur_p(1), cur_p(2), cur_p(3));

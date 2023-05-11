@@ -140,16 +140,16 @@ while (true)
         break
     end
 end
-%%
+%% plan and draw the figure
 cur_joint = joint_list(:,1);
 startpose = tip_pose_list{1};
 startpos = startpose(1:3, 4);
-path = load("jhu.mat");
-s = size(path.data);
+path = load("Kirby.mat");
+s = size(path.downsampled_track);
 joints = [];
 for i = 1 : 30 : s(1)
-    dx = -path.data(i,1) / 5000;
-    dy = path.data(i,2) / 5000;
+    dx = -path.downsampled_track(i,1) / 5000;
+    dy = path.downsampled_track(i,2) / 5000;
     dz = 0;
     tmp_pose = startpose;
     tmp_pose(1:3,4) = startpos + [dx;dy;dz];
@@ -172,7 +172,6 @@ for i=1:length(joints)
     p = tmp_curr(1:3, 4);
     scatter3(p(1), p(2), p(3),'MarkerFaceColor',[0 .75 .75]);
     hold on;
-    i
 end
     
 

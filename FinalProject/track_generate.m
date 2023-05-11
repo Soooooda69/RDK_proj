@@ -1,41 +1,5 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 % Load the image
-image = imread('JHU.png');
+image = imread('kirby.jpg');
 
 % Define the scale (in cm/pixel)
 scale = 0.01;  % Adjust this to your actual scale
@@ -158,4 +122,4 @@ save("track.mat","track","n")
 downsampled_track = track(1:downsampling_factor:end, :);
 
 % Save the downsampled track to a .mat file in your local directory
-save('JHU.mat', 'downsampled_track');
+save('Kirby.mat', 'downsampled_track');
